@@ -29,7 +29,7 @@
         ============================================================ */
         .wdu__top {
             display: grid;
-            grid-template-columns: 360px 1fr;
+            grid-template-columns: 360px 1fr;      /* ← fixed-width image column */
             gap: 4rem;
             align-items: start;
             margin-bottom: 5rem;
@@ -41,9 +41,8 @@
             border-radius: 14px;
             overflow: hidden;
             width: 100%;
-            aspect-ratio: 4 / 5;
-            background: #e2e8f0;                 /* slate-200 */
-            box-shadow: 0 20px 40px -16px rgba(15, 23, 42, 0.18);
+            aspect-ratio: 4 / 5;                    /* ← small portrait ratio */
+            background: #ece4d5;
         }
 
         .wdu__image {
@@ -51,9 +50,8 @@
             height: 100%;
             object-fit: cover;
             display: block;
-            clip-path: inset(0 0 100% 0);
+            clip-path: inset(0 0 100% 0);           /* start hidden */
             will-change: clip-path;
-            filter: saturate(0.92) contrast(1.02) brightness(1.02);
         }
 
         /* ---------- Right column ---------- */
@@ -68,7 +66,7 @@
             font-weight: 700;
             letter-spacing: 3px;
             text-transform: uppercase;
-            color: #4f46e5;                      /* indigo accent */
+            color: #8a7d70;
             margin-bottom: 1.2rem;
         }
 
@@ -78,7 +76,7 @@
             font-size: clamp(1.6rem, 2.6vw, 2.2rem);
             line-height: 1.22;
             letter-spacing: -0.3px;
-            color: #0f172a;                      /* slate-900 */
+            color: #1a120e;
             margin-bottom: 2rem;
             max-width: 520px;
         }
@@ -88,7 +86,7 @@
         .wdu__paragraph {
             font-size: 0.92rem;
             line-height: 1.7;
-            color: #475569;                      /* slate-600 */
+            color: #6b5d51;
             max-width: 460px;
         }
 
@@ -99,7 +97,7 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 2rem;
-            border-top: 1px solid rgba(79, 70, 229, 0.18);   /* indigo tint */
+            border-top: 1px solid rgba(26, 18, 14, 0.12);
             padding-top: 3rem;
         }
 
@@ -110,9 +108,9 @@
 
         .wdu__feature-num {
             font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: #4f46e5;                      /* indigo accent */
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #8a7d70;
             margin-bottom: 3.5rem;
         }
 
@@ -120,18 +118,19 @@
             font-family: 'Playfair Display', Georgia, serif;
             font-weight: 500;
             font-size: 1.1rem;
-            color: #0f172a;
+            color: #1a120e;
             margin-bottom: 1rem;
         }
 
         .wdu__feature-desc {
             font-size: 0.86rem;
             line-height: 1.6;
-            color: #64748b;                      /* slate-500 */
+            color: #6b5d51;
         }
 
         /* ============================================================
-           LINE-BY-LINE REVEAL
+           LINE-BY-LINE REVEAL (feature columns)
+           Each element is hidden and slides up when in view.
         ============================================================ */
         .wdu [data-line] {
             opacity: 0;
@@ -177,7 +176,7 @@
         {{-- ── TOP ROW ── --}}
         <div class="wdu__top">
 
-            {{-- Image --}}
+            {{-- Image (small, reveals top→bottom on scroll) --}}
             <div class="wdu__image-wrap">
                 <img
                     class="wdu__image"
@@ -251,7 +250,7 @@
                 var lineEls    = section.querySelectorAll('[data-line]');
 
                 /* ============================================================
-                   1. WRAP HEADING LETTERS
+                   1. WRAP HEADING LETTERS (for gradual color reveal)
                 ============================================================ */
                 function wrapNode(node) {
                     if (node.nodeType === 3) {
@@ -274,9 +273,9 @@
                 Array.prototype.slice.call(heading.childNodes).forEach(wrapNode);
                 var letters = heading.querySelectorAll('.letter');
 
-                /* Palette: slate-300 → slate-900 (light to dark) */
-                var LIGHT = [203, 213, 225];   /* slate-300 */
-                var DARK  = [ 15,  23,  42];   /* slate-900 */
+                /* Palette: muted warm → deep brown */
+                var LIGHT = [200, 190, 175];
+                var DARK  = [ 26,  18,  14];
 
                 function mixColor(t) {
                     var r = Math.round(LIGHT[0] + (DARK[0] - LIGHT[0]) * t);
@@ -286,13 +285,16 @@
                 }
 
                 /* ============================================================
-                   2. LINE-BY-LINE REVEAL
+                   2. LINE-BY-LINE REVEAL for [data-line] elements
+                      Uses IntersectionObserver so each line reveals
+                      as it enters the viewport (bottom → top feel).
                 ============================================================ */
                 var lineObserver = new IntersectionObserver(function (entries) {
                     entries.forEach(function (entry) {
                         if (entry.isIntersecting) {
                             var el = entry.target;
 
+                            /* Stagger within its parent group */
                             var siblings = Array.prototype.slice.call(
                                 el.parentNode.querySelectorAll('[data-line]')
                             );
@@ -316,16 +318,17 @@
                 });
 
                 /* ============================================================
-                   3. SCROLL-DRIVEN: image reveal + heading colors
+                   3. SCROLL-DRIVEN: image reveal + heading letter colors
                 ============================================================ */
                 var ticking = false;
 
                 function update() {
                     var vh = window.innerHeight;
 
-                    /* --- Image reveal --- */
+                    /* --- Image: reveal top → bottom --- */
                     if (image) {
                         var iRect = image.getBoundingClientRect();
+                        /* trigger window: image top crosses 90% → 40% of viewport */
                         var iStart = vh * 0.90;
                         var iEnd   = vh * 0.40;
                         var iP = (iStart - iRect.top) / (iStart - iEnd);
@@ -335,7 +338,7 @@
                         image.style.clipPath = 'inset(0 0 ' + bottomInset + '% 0)';
                     }
 
-                    /* --- Heading letters light → dark --- */
+                    /* --- Heading letters: light → dark --- */
                     if (letters.length) {
                         var hRect = heading.getBoundingClientRect();
                         var hStart = vh * 1.0;
